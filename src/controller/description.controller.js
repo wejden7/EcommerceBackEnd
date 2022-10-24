@@ -1,9 +1,10 @@
 const {validationResult } = require('express-validator');
 
-const { deleteDescriptionProduit, addDescription } = require("../service/produit.service");
+const { deleteDescriptionProduit, addDescription,findProduit } = require("../service/produit.service");
 const {deleteDescription,createDescription,updateDescription} = require("../service/description.services");
 
 exports.deleteDescription =async (req, res,next)=>{
+    console.log(req.body)
 
     const errors = validationResult(req);
     
@@ -28,12 +29,15 @@ exports.deleteDescription =async (req, res,next)=>{
             return await deleteDescriptionProduit({"_id": id_produit,},id_description)
 
         }).then(result=>{
-            return res.status(200).send({
-                success: true,
-                message: "delete successfully",
-                data: result
+            findProduit({_id:id_produit}).then((p)=>{
+                return res.status(200).
+                send({
+                    success: true,
+                    message: "add description successfully",
+                    data: p[0]
+                });
+            })
 
-            });
         }).catch(error => {
 
             return res.status(500).send({
@@ -71,12 +75,15 @@ const {id, title,description} = req.body;
            return await addDescription({"_id":id},result._id)
 
         }).then(result=>{
-            return res.status(200).
+            findProduit({_id:id}).then((p)=>{
+                return res.status(200).
                 send({
                     success: true,
                     message: "add description successfully",
-                    data: result
+                    data: p[0]
                 });
+            })
+            
         }).catch(error=>{
             return res.status(500).send({
                 success: false,
@@ -101,19 +108,26 @@ exports.updateDescription = async (req, res, next)=>{
             errors: errors.array() 
         });
     }
-    const {title, description,id} = req.body;
-    
+    const {id,_id, title,description} = req.body;
+
+    var data = {
+        "title": title,
+        "description": description
+    }
     var condition ={
-        "_id": id
+        _id: _id
     }
 
     updateDescription(condition,req.body).
         then(result=>{
 
-            return res.status(200).send({
-                success: true,
-                message: "update description successfully",
-                data: result
+            findProduit({_id:id}).then((p)=>{
+                return res.status(200).
+                send({
+                    success: true,
+                    message: "add description successfully",
+                    data: p[0]
+                });
             })
 
         }).catch(error=>{

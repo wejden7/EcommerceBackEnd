@@ -1,10 +1,10 @@
 const { request } = require('express');
 const imageModel = require('../models/image.model');
 async function createImage(image){
-
-    
-
-    return await imageModel(image).save();
+   data ={
+        url:image
+    }
+    return await imageModel(data).save();
 }
 
 async function createImages(images,callback){

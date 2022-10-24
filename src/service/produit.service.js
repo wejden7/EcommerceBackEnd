@@ -17,6 +17,15 @@ async function findProduit(condition){
     return await produitModel.find(condition).populate(["images","description","marque","forniseur","categorie"]);
 }
 
+async function existProduit(condition){
+  return  await produitModel.findOne(condition)
+                .then((result)=>{
+                    if(result)return true
+                    return false
+                })
+                .catch(error=>false);
+}
+
 async function deleteProduit(condition){
 
     return await produitModel.deleteMany(condition);
@@ -114,7 +123,7 @@ async function TestOfid(m,f,c,callback){
 }
 
 module.exports ={
-    
+                    existProduit,
                     createProduit,
                     findProduit,
                     deleteProduit,

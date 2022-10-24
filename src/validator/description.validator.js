@@ -1,8 +1,8 @@
 const { body } = require('express-validator');
 
 exports.deleteDescriptionValidator =
-    [
-        body('id_produit').exists().notEmpty(),
+    [ 
+        body('id_produit').exists().notEmpty(), 
         body('id_description').exists().notEmpty(),
        
     ];

@@ -1,6 +1,6 @@
 const {validationResult } = require('express-validator');
-
-const { deleteImageProduit,addImage } = require("../service/produit.service");
+const deleteFile = require("../utils/delete.utils");
+const { deleteImageProduit,addImage,findProduit } = require("../service/produit.service");
 const {deleteImage,createImage} = require("../service/images.service");
 
 exports.deleteImage =async (req, res,next)=>{
@@ -23,17 +23,20 @@ exports.deleteImage =async (req, res,next)=>{
     }
 
    await deleteImage(condition).
-        then(async resualt=>{
+        then(async image=>{ 
+            deleteFile('./storage/images/'+image.url)
 
             return await deleteImageProduit({"_id": id_produit,},id_image)
 
         }).then(result=>{
-            return res.status(200).send({
+            findProduit({_id:id_produit}).then((p)=>{
+                return res.status(200).
+            send({
                 success: true,
-                message: "delete successfully",
-                data: result
-
+                message: "add Image successfully",
+                data: p[0]
             });
+            })
         }).catch(error => {
 
             return res.status(500).send({
@@ -50,7 +53,7 @@ exports.deleteImage =async (req, res,next)=>{
 
 exports.addImage = async (req, res, next)=>{
 
-    const errors = validationResult(req);
+    const errors = validationResult(req.body);
     
     if (!errors.isEmpty()) {
         return  res.status(400).json({ 
@@ -59,31 +62,38 @@ exports.addImage = async (req, res, next)=>{
             errors: errors.array() 
         });
     }
-const {id, url} = req.body;
+const {id} = req.body;
 
     var image = {
         "url": url,
     }
-    await  createImage(image).
+    console.log(req.body);
+    console.log(req.files);
+    console.log(req.file);
+    for await(image of req.files ){
+        await  createImage(image.filename).
         then(async result=>{
 
            return await addImage({"_id":id},result._id)
 
-        }).then(result=>{
-            return res.status(200).
-                send({
-                    success: true,
-                    message: "add Image successfully",
-                    data: result
-                });
-        }).catch(error=>{
-            return res.status(500).send({
-                success: false,
-                message: "add Image failed",
-                errors: error.message
-            });
+        })
+    }
+    findProduit({_id:id}).then((p)=>{
+        return res.status(200).
+    send({
+        success: true,
+        message: "add Image successfully",
+        data: p[0]
+    });
+    }).catch(error=>  res.status(501).
+    send({
+        success: true,
+        message: "add Image Erorr",
+        error: error
+    }))
 
-        });
+    
+   
 
 
 

@@ -15,4 +15,4 @@ const descriptionSchema = mongoose.Schema({
 
 const descriptionModel = mongoose.model('description', descriptionSchema);
 
-module.exports = descriptionModel;
+module.exports = descriptionModel; 

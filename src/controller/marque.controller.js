@@ -36,11 +36,12 @@ exports.createMarque =  async (req, res, next) => {
 
     createMarque(req.body).
         then(result=>{
-            return res.status(200).send({
+            setTimeout(()=>{ 
+                  return res.status(200).send({
                 success: true,
                 message: 'The marque has been created',
                 data: result
-            })
+            })},1000)
 
         }).catch(error=>{   deleteFile('./storage/logos/'+req.file.filename)
 
@@ -87,11 +88,14 @@ exports.findMarque  = async (req,res, next)=>{
 
     findMarque({}).
         then(result=>{
-            return res.status(200).send({ 
-                success: true,
-                message: 'The marque has been found',
-                data: result
-            })
+            setTimeout(()=>{
+                return res.status(200).send({ 
+                    success: true,
+                    message: 'The marque has been found',
+                    data: result
+                })
+            },1000)
+           
         }).catch((error)=>{
             return res.status(400).send({
                 success: false,

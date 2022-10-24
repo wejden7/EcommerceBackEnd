@@ -2,167 +2,84 @@ const { validationResult } = require("express-validator");
 const deleteFile = require("../utils/delete.utils");
 const {
   createProduit,
-  addImage,
-  addDescription,
   findProduit,
   deleteProduit,
   deleteAllProduit,
   updateProduit,
   TestOfid,
+  existProduit,
+  addImage
 } = require("../service/produit.service");
-const { createImages, deleteImage } = require("../service/images.service");
-const {
-  createDescriptions,
-  deleteDescription,
-} = require("../service/description.services");
+const {createImage ,deleteImage } = require("../service/images.service");
+const { deleteDescription } = require("../service/description.services");
 
-// Function create New produit
 exports.createProduit = async (req, res, next) => {
-  const errors = validationResult(req.body); // validator des chant input not work car validator expreese not work avec de FormData work only whith json
+  const errors = validationResult(req.body);
 
-  // Condition pour detect les Error de chont input et return respance
   if (!errors.isEmpty()) {
+    deleteFile('./storage/images/'+req.file.filename)
     return res.status(400).json({
       success: false,
       message: "requieste invalide ",
       errors: errors.array(),
     });
   }
+  console.log(req.body)
+  console.log(req.file.filename)
 
-  var catchError = false; // Variable pour catch les error
-  var messageError = ""; // Variable pour done le message de l'Error catch
+  const { name, marque, forniseur, categorie } = req.body;
 
-  const {
-    name,
-    prix,
-    quantity,
-    tva,
-    description,
-    marque,
-    forniseur,
-    categorie,
-  } = req.body; // recupertion le donne de requeste
+  var condition = { name:  new RegExp('^'+name+'$', "i") };
 
-  var descriptions = JSON.parse(description); // transfere un tableau a json
+  const _existeProduit = await existProduit(condition);
 
-  const imageNames = req.files; // requperation le files image que save a storege de server
+  if (_existeProduit) {
+    deleteFile('./storage/images/'+req.file.filename)
 
-  var produit = {
-    name: name,
-    prix: prix,
-    quantity: quantity,
-    tva: tva,
-    marque: marque,
-    forniseur: forniseur,
-    categorie: categorie,
-  }; // colecton d'un produit pour save
+    return res.status(404).json({
+      success: false,
+      message: "Produit has been Existe",
+      errors: `${name} has been Existe,`,
+    });
+  } 
 
-  var condition = { name: name }; // Condition pour test les name de produit existe
+  await TestOfid(marque, forniseur, categorie, async (error, result) => {
+    if(error){
+    deleteFile('./storage/images/'+req.file.filename)
 
-  // lance le Test de existe de name
-  findProduit(condition).then(async (result) => {
-    //test si result.length ===1 danc lesname exist donc return respance avec msg le name existe
-    if (result.length === 1) {
-      // avant return respance ande exist il faut delete tout le file que enregistre  avent
-      for await (let image of imageNames) {
-        deleteFile("./storage/images/" + image.filename);
-      }
-      return res.status(400).send({
+      return res.status(404).json({
         success: false,
-        message: "exist",
-        result: result,
+        message: "Constraint Error",
+        errors: `${error}`,
       });
-    } else {
-      //else si neExiste test tout le id exist si il a un id nexiste retur respance avec msg forinkey error
-
-      await TestOfid(marque, forniseur, categorie, async (error, result) => {
-        if (error) {
-          // avant return respance ande exist il faut delete tout le file que enregistre  avent
-          for await (let image of imageNames) {
-            deleteFile("./storage/images/" + image.filename);
-          }
-          return res.status(400).send({
-            success: false,
-            message: "ForienKey failed",
-            errors: error,
+    }  
+   
+   await createProduit(req.body)
+      .then(async (result) => {  
+        const condition = {_id:result._id}
+        await createImage(req.file.filename)
+        .then(async(result)=>{
+          await addImage(condition,result._id)
+        }).catch((error)=>{
+          deleteFile('./storage/images/'+req.file.filename)
+        })
+       
+        findProduit(condition).then((p) => {
+          return res.status(200).send({
+            success: true,
+            message: "Success created",
+            data: p[0],
           });
-        }
-
-        //si aucun error existe creat produit
-        await createProduit(produit)
-          .then(async (result) => {
-            //produit created
-            var condition = {
-              _id: result._id,
-            };
-            const id_produit = result._id;
-            // creat tout le file que savet avant avect le meme nam dont image
-            await createImages(imageNames, async (error, result) => {
-              //catch un error de creat image
-              if (error) {
-                catchError = true;
-                messageError = error;
-              }
-              //tout les images creat et return result avec le id de images
-              // add les id des image a produit
-              console.log(result);
-              await addImage(condition, result)
-                .then(() => {
-                  console.log("await0");
-                })
-                .catch((error) => {
-                  //catch les error
-                  catchError = true;
-                  messageError = error.message;
-                });
-            });
-            // creat les description dant table decription
-            await createDescriptions(descriptions, async (error, result) => {
-              //catch les error
-              if (error) {
-                catchError = true;
-                messageError = error;
-              }
-              //creat le description  et return  les result avec les id
-
-              console.log(result);
-              //add le id de description a produit
-              await addDescription(condition, result)
-                .then(() => {})
-                .catch((error) => {
-                  //catch les error
-                  catchError = true;
-                  messageError = error.message;
-                });
-            });
-
-            // si catchError et true donc il fant lance le midelexer avec next(error) error pour sipreme le produit avec le image el les description
-            if (catchError) {
-              req.id = id_produit;
-              req.messageError = messageError;
-              return next("error ");
-            }
-            //si no le produit creat avec success
-            return res.status(200).send({
-              success: true,
-              message: "Success created",
-              result: result,
-            });
-          })
-          .catch(async (error) => {
-            //catch les error ou cour de cration de produit  il faut delete tou le file avnt return respance error
-            console.log("catch error: " + error);
-            for await (let image of imageNames) {
-              deleteFile("./storage/images/" + image.filename);
-            }
-            return res.status(400).json({
-              success: false,
-              message: "requieste invalide ",
-              errors: error.message,
-            });
-          });
+        });
+      })
+      .catch(async (error) => {
+    deleteFile('./storage/images/'+req.file.filename)
+        return res.status(400).json({
+          success: false,
+          message: "requieste invalide ",
+          errors: error.message,
+        });
       });
-    }
   });
 };
 
@@ -209,7 +126,8 @@ exports.deleteProduit = async (req, res, next) => {
 
       images = result[0].images;
 
-      for await (let image of images) {
+      for await (let image of images) { 
+        deleteFile('./storage/images/'+image.url)
         await deleteImage(image)
           .then(() => {})
           .catch((err) => {});
@@ -257,6 +175,7 @@ exports.deleteAllProduit = async (req, res, next) => {
 };
 
 exports.updateProduit = async (req, res, next) => {
+  console.log(req.body)
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -268,14 +187,17 @@ exports.updateProduit = async (req, res, next) => {
   }
   var condition = {
     _id: req.params.id,
-  };
+  }; 
+  console.log(req.body);
 
-  updateProduit(condition, req.body)
+  updateProduit(condition, req.body.data)
     .then((result) => {
-      return res.status(200).send({
-        success: true,
-        message: "updated successfully",
-        data: result,
+      findProduit(condition).then((p) => {
+        return res.status(200).send({
+          success: true,
+          message: "Success created",
+          data: p[0],
+        });
       });
     })
     .catch((error) => {
@@ -285,13 +207,9 @@ exports.updateProduit = async (req, res, next) => {
         errors: error.message,
       });
     });
-}; 
+};
 
 /*exports.deleteAllProduit =async (req,res,next) => {
-
-
-
-
  await   findProduit({}).
             then(async (result)=>{
 
@@ -383,4 +301,3 @@ exports.updateProduit = async (req, res, next) => {
 
  }
 */
- 

@@ -9,15 +9,15 @@ const{creatProduitError} =require('../../middleware/produit.middelware')
 const {createProduitValidator,updateProduitValidator}=require('../../validator/produit.validator')
 
 //
-const {uploadImage} =require('../../utils/upload.utils')
+const {uploadImage} =require('../../utils/upload.utils')//uploadImage.array("images",25)
 // Router 
-produitRouter.post('/produit',createProduitValidator,uploadImage.array("images",25),createProduit,creatProduitError)
+produitRouter.post('/produit',createProduitValidator,uploadImage.single("image"),createProduit,creatProduitError)
 produitRouter.get('/produit',findProduit)
 produitRouter.get('/produit/:id',findProduit)
-produitRouter.delete('/produit/:id',deleteProduit)
+produitRouter.delete('/produit/:id',deleteProduit) 
 produitRouter.delete('/produit',deleteAllProduit)
 
 produitRouter.put('/produit/:id',updateProduitValidator,updateProduit)
 
 
-module.exports=produitRouter
+module.exports=produitRouter 
