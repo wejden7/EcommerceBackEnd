@@ -200,3 +200,32 @@ exports.findOneCategorie = async (req, res, next) => {
       });
     });
 };
+
+exports.listeCategories = async (req , res, next) =>{
+
+ findAllCategorie()
+ .then(async(categories) => {
+  let data= []
+
+  for await (item of categories){
+      let newitem=item.toObject()
+
+    
+      newitem.souscategorie = req.data.filter((_)=>_.categorie._id.equals(item._id))
+     
+      data.push(newitem)
+  }
+
+
+  res.send(data)
+  
+  
+ })
+ .catch((error) => {
+   res.status(400).json({
+     success: false,
+     message: "Somthing failed to find category",
+     errors: error.message,
+   });
+ });
+}

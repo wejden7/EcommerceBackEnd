@@ -213,3 +213,19 @@ exports.deleteAllSousSousCategorieOfSousCategorie = async (req, res, next) => {
       });
     });
 };
+
+exports.listSSCategorie= async (req, res, next) => {
+  
+  findSousSousCategorie({})
+    .then((categorie) => {
+     req.data = categorie
+     next()
+    })
+    .catch((error) => {
+      res.status(400).json({
+        success: false,
+        message: "Somthing failed to find category",
+        errors: error.message,
+      });
+    });
+}

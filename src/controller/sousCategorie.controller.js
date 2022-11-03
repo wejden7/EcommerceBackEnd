@@ -311,3 +311,34 @@ exports.deleteAllSousSousCategorieOfSousCategorie = async (req, res, next) => {
    
     
 }
+
+exports.listSCategorie = async (req, res, next) => {
+
+    findSousCategorie({})
+        .then(async(categorie)=>{
+let data= []
+
+            for await (item of categorie){
+                let newitem=item.toObject()
+
+                newitem.soussouscategorie = req.data.filter((_)=>_.souscategorie._id.equals(item._id))
+               
+                data.push(newitem)
+            }
+
+
+            
+            req.data= data
+            next()
+
+        }).catch((error)=>{
+
+            res.status(400).json({ 
+                success: false,
+                message:'Somthing failed to find category',
+                errors: error.message
+            });
+
+        });
+   
+}

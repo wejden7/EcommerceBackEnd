@@ -1,7 +1,9 @@
 const CategorieRouter = require('express').Router()
 
+const {listSCategorie} = require('../../controller/sousCategorie.controller')
+const {listSSCategorie} = require('../../controller/SousSousCategorie.controler')
 // Controller
-const {createCategorie,deleteOneCategorie,updateOneCategorie,findAllCategorie,findOneCategorie,}=require('../../controller/categorie.controller')
+const {createCategorie,deleteOneCategorie,updateOneCategorie,findAllCategorie,findOneCategorie,listeCategories}=require('../../controller/categorie.controller')
 
 // Middleware 
 
@@ -18,6 +20,7 @@ CategorieRouter.delete('/categorie/:id',deleteCategorieByIdValidator,deleteSousS
 CategorieRouter.put('/categorie/:id',updateCategorieByIdValidator,uploadIcon.single('icon'),updateOneCategorie)
 CategorieRouter.get('/categorie/:id',findOneCategorie)
 CategorieRouter.get('/categorie',findAllCategorie)
+CategorieRouter.get('/listcategorie',listSSCategorie,listSCategorie,listeCategories)
 
 
 module.exports=CategorieRouter
