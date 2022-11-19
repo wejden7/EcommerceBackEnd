@@ -214,12 +214,11 @@ exports.deleteAllSousSousCategorieOfSousCategorie = async (req, res, next) => {
     });
 };
 
-exports.listSSCategorie= async (req, res, next) => {
-  
+exports.listSSCategorie = async (req, res, next) => {
   findSousSousCategorie({})
     .then((categorie) => {
-     req.data = categorie
-     next()
+      req.data = categorie;
+      next();
     })
     .catch((error) => {
       res.status(400).json({
@@ -228,4 +227,4 @@ exports.listSSCategorie= async (req, res, next) => {
         errors: error.message,
       });
     });
-}
+};

@@ -25,6 +25,12 @@ app.use('/',require('./sousCategorie/sousCategorie.router'))
 
 app.use('/',require('./sousSousCategorie/sousSousCategorie.router'))
 
+app.use('/',require('./offre/offre.Router'))
+
+app.use('/',require('./offreProduit/offreProduit.router'))
+
+app.use('/',require('./SliderOffre/SliderOffre.router'))
+
 app.use('/api',require('./notification/app.notification.router'))
 
 

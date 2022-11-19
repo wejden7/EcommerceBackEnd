@@ -5,5 +5,5 @@ urlcloud = "mongodb+srv://wejden:wejden@cluster0.zmsspy3.mongodb.net/e_commerce?
 
 mongosse.connect(urlcloud, function(err, db) {
   if (err) throw err;
- console.log('conction succses to bd  ')
+ console.log('conction succses to bd')
 }); 
